@@ -61,7 +61,7 @@
 				
 				<option value="file2">github.com/Razzle131/loglint/logcheck/decorators.go (100.0%)</option>
 				
-				<option value="file3">github.com/Razzle131/loglint/logcheck/logcheck.go (91.2%)</option>
+				<option value="file3">github.com/Razzle131/loglint/logcheck/logcheck.go (90.2%)</option>
 				
 				</select>
 			</div>
@@ -99,7 +99,7 @@ func main() <span class="cov0" title="0">{
         var configPath string
         flag.StringVar(&amp;configPath, "config", "config.yaml", "linter configuration file")
         flag.Parse()
-        cfg := config.MustLoad(configPath)
+        cfg := config.Load(configPath)
 
         analyzer := logcheck.New(cfg)
         singlechecker.Main(analyzer)
@@ -109,8 +109,6 @@ func main() <span class="cov0" title="0">{
 		<pre class="file" id="file1" style="display: none">package config
 
 import (
-        "log"
-
         "github.com/ilyakaznacheev/cleanenv"
 )
 
@@ -127,10 +125,22 @@ type Config struct {
         EnabledFuncs []Func   `yaml:"enabled_funcs"`                     // slice of func definitions that linter searches for
 }
 
-func MustLoad(configPath string) Config <span class="cov0" title="0">{
+var defaultConfig = Config{
+        EnabledRules: 15,
+        AvoidedData:  []string{"password", "apikey", "token"},
+        EnabledFuncs: []Func{
+                {Name: "log/slog.LogAttrs", MsgPos: 2, ArgPos: 3},
+                {Name: "log/slog.Debug", MsgPos: 0, ArgPos: 1},
+                {Name: "log/slog.Info", MsgPos: 0, ArgPos: 1},
+                {Name: "log/slog.Warn", MsgPos: 0, ArgPos: 1},
+                {Name: "log/slog.Error", MsgPos: 0, ArgPos: 1},
+        },
+}
+
+func Load(configPath string) Config <span class="cov0" title="0">{
         var cfg Config
         if err := cleanenv.ReadConfig(configPath, &amp;cfg); err != nil </span><span class="cov0" title="0">{
-                log.Fatalf("cannot read config %q: %s", configPath, err)
+                return defaultConfig
         }</span>
 
         <span class="cov0" title="0">return cfg</span>
@@ -175,11 +185,11 @@ import (
 var (
         analyzer     *analysis.Analyzer
         funcs        []config.Func
-        avoidedData  []string = []string{"password", "apikey", "token"}
-        enabledRules int      = 15
+        avoidedData  []string
+        enabledRules int
 )
 
-func New(cfg config.Config) *analysis.Analyzer <span class="cov1" title="1">{
+func New(cfg config.Config) *analysis.Analyzer <span class="cov3" title="5">{
         funcs = cfg.EnabledFuncs
         avoidedData = cfg.AvoidedData
         enabledRules = cfg.EnabledRules
@@ -200,7 +210,7 @@ func run(pass *analysis.Pass) (interface{}, error) <span class="cov1" title="1">
                 panic("failed to obtain inspector")</span>
         }
 
-        <span class="cov1" title="1">nodeFilter := []ast.Node{ // filter needed nodes: visit only them
+        <span class="cov1" title="1">nodeFilter := []ast.Node{
                 (*ast.CallExpr)(nil),
         }
 
@@ -213,7 +223,7 @@ func run(pass *analysis.Pass) (interface{}, error) <span class="cov1" title="1">
                 <span class="cov6" title="59">fn := typeutil.StaticCallee(pass.TypesInfo, call)
 
                 idx := slices.IndexFunc(funcs, func(f config.Func) bool </span><span class="cov10" title="771">{
-                        return f.Name == fn.FullName()
+                        return fn != nil &amp;&amp; f.Name == fn.FullName()
                 }</span>)
                 <span class="cov6" title="59">if idx == -1 </span><span class="cov4" title="12">{
                         return
@@ -247,7 +257,11 @@ func checkArg(expr ast.Expr) []error <span class="cov6" title="60">{
 }</span>
 
 func checkLiteral(literal *ast.BasicLit) []error <span class="cov5" title="39">{
-        msg := literal.Value[1 : len(literal.Value)-1] // remove quotes
+        if len(literal.Value) &lt; 2 </span><span class="cov0" title="0">{
+                return []error{}
+        }</span>
+
+        <span class="cov5" title="39">msg := literal.Value[1 : len(literal.Value)-1] // remove quotes
         checks := []error{checkFirstLetterCase(msg), checkEnglish(msg), checkSpecialSymbols(msg)}
 
         res := []error{}
@@ -343,7 +357,6 @@ func checkSensetive(s string) error <span class="cov5" title="36">{
         <span class="cov3" title="7">return nil</span>
 }
 
-// render returns the pretty-print of the given node
 func render(fset *token.FileSet, x any) string <span class="cov5" title="39">{
         var buf bytes.Buffer
         if err := printer.Fprint(&amp;buf, fset, x); err != nil </span><span class="cov0" title="0">{

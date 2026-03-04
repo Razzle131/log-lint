@@ -10,6 +10,11 @@ import (
 	"golang.org/x/tools/go/analysis/analysistest"
 )
 
+func initEnv() {
+	cfg := config.Load("")
+	_ = New(cfg)
+}
+
 func TestCheckFirstLetterCase(t *testing.T) {
 	testCases := []struct {
 		name    string
@@ -48,6 +53,7 @@ func TestCheckFirstLetterCase(t *testing.T) {
 		},
 	}
 
+	initEnv()
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			err := checkFirstLetterCase(testCase.input)
@@ -89,6 +95,7 @@ func TestCheckEnglish(t *testing.T) {
 		},
 	}
 
+	initEnv()
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			err := checkEnglish(testCase.input)
@@ -140,6 +147,7 @@ func TestCheckSpecialSymbols(t *testing.T) {
 		},
 	}
 
+	initEnv()
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			err := checkSpecialSymbols(testCase.input)
@@ -176,6 +184,7 @@ func TestCheckSensetive(t *testing.T) {
 		},
 	}
 
+	initEnv()
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 
@@ -196,9 +205,9 @@ func TestAll(t *testing.T) {
 		t.Fatalf("Failed to get wd: %s", err)
 	}
 
-	cfg := config.MustLoad("../config.yaml")
+	cfg := config.Load("../config.yaml")
 	analyzer := New(cfg)
 
 	testdata := filepath.Join(wd, "testdata")
-	analysistest.Run(t, testdata, analyzer, "slog/") // no auto test for zap, need bin
+	analysistest.Run(t, testdata, analyzer, "slog/")
 }

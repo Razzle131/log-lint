@@ -13,7 +13,7 @@ func main() {
 	var configPath string
 	flag.StringVar(&configPath, "config", "config.yaml", "linter configuration file")
 	flag.Parse()
-	cfg := config.MustLoad(configPath)
+	cfg := config.Load(configPath)
 
 	analyzer := logcheck.New(cfg)
 	singlechecker.Main(analyzer)

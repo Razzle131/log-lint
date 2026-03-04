@@ -1,8 +1,6 @@
 package config
 
 import (
-	"log"
-
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
@@ -19,10 +17,22 @@ type Config struct {
 	EnabledFuncs []Func   `yaml:"enabled_funcs"`                     // slice of func definitions that linter searches for
 }
 
-func MustLoad(configPath string) Config {
+var defaultConfig = Config{
+	EnabledRules: 15,
+	AvoidedData:  []string{"password", "apikey", "token"},
+	EnabledFuncs: []Func{
+		{Name: "log/slog.LogAttrs", MsgPos: 2, ArgPos: 3},
+		{Name: "log/slog.Debug", MsgPos: 0, ArgPos: 1},
+		{Name: "log/slog.Info", MsgPos: 0, ArgPos: 1},
+		{Name: "log/slog.Warn", MsgPos: 0, ArgPos: 1},
+		{Name: "log/slog.Error", MsgPos: 0, ArgPos: 1},
+	},
+}
+
+func Load(configPath string) Config {
 	var cfg Config
 	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
-		log.Fatalf("cannot read config %q: %s", configPath, err)
+		return defaultConfig
 	}
 
 	return cfg

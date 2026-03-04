@@ -20,8 +20,8 @@ import (
 var (
 	analyzer     *analysis.Analyzer
 	funcs        []config.Func
-	avoidedData  []string = []string{"password", "apikey", "token"}
-	enabledRules int      = 15
+	avoidedData  []string
+	enabledRules int
 )
 
 func New(cfg config.Config) *analysis.Analyzer {
@@ -45,7 +45,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		panic("failed to obtain inspector")
 	}
 
-	nodeFilter := []ast.Node{ // filter needed nodes: visit only them
+	nodeFilter := []ast.Node{
 		(*ast.CallExpr)(nil),
 	}
 
@@ -58,7 +58,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		fn := typeutil.StaticCallee(pass.TypesInfo, call)
 
 		idx := slices.IndexFunc(funcs, func(f config.Func) bool {
-			return f.Name == fn.FullName()
+			return fn != nil && f.Name == fn.FullName()
 		})
 		if idx == -1 {
 			return
@@ -92,6 +92,10 @@ func checkArg(expr ast.Expr) []error {
 }
 
 func checkLiteral(literal *ast.BasicLit) []error {
+	if len(literal.Value) < 2 {
+		return []error{}
+	}
+
 	msg := literal.Value[1 : len(literal.Value)-1] // remove quotes
 	checks := []error{checkFirstLetterCase(msg), checkEnglish(msg), checkSpecialSymbols(msg)}
 
@@ -188,7 +192,6 @@ func checkSensetive(s string) error {
 	return nil
 }
 
-// render returns the pretty-print of the given node
 func render(fset *token.FileSet, x any) string {
 	var buf bytes.Buffer
 	if err := printer.Fprint(&buf, fset, x); err != nil {
