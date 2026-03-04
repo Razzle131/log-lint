@@ -1,9 +1,13 @@
 package logcheck
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
+	"github.com/Razzle131/loglint/config"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/tools/go/analysis/analysistest"
 )
 
 func TestCheckFirstLetterCase(t *testing.T) {
@@ -184,4 +188,17 @@ func TestCheckSensetive(t *testing.T) {
 			require.NoError(t, err)
 		})
 	}
+}
+
+func TestAll(t *testing.T) {
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get wd: %s", err)
+	}
+
+	cfg := config.MustLoad("../config.yaml")
+	analyzer := New(cfg)
+
+	testdata := filepath.Join(wd, "testdata")
+	analysistest.Run(t, testdata, analyzer, "slog/") // no auto test for zap, need bin
 }

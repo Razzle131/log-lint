@@ -12,6 +12,8 @@ import (
 
 	"github.com/Razzle131/loglint/config"
 	"golang.org/x/tools/go/analysis"
+	"golang.org/x/tools/go/analysis/passes/inspect"
+	"golang.org/x/tools/go/ast/inspector"
 	"golang.org/x/tools/go/types/typeutil"
 )
 
@@ -28,50 +30,47 @@ func New(cfg config.Config) *analysis.Analyzer {
 	enabledRules = cfg.EnabledRules
 
 	analyzer = &analysis.Analyzer{
-		Name: "loglint",
-		Doc:  "checks logging calls",
-		Run:  run,
+		Name:     "loglint",
+		Doc:      "checks logging calls",
+		Run:      run,
+		Requires: []*analysis.Analyzer{inspect.Analyzer},
 	}
 
 	return analyzer
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {
-	for _, file := range pass.Files {
-		ast.Inspect(file, func(n ast.Node) bool {
-			call, ok := n.(*ast.CallExpr)
-			if !ok {
-				return true
-			}
+	inspector := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 
-			fn := typeutil.StaticCallee(pass.TypesInfo, call)
-			if fn == nil {
-				return true
-			}
-
-			idx := slices.IndexFunc(funcs, func(f config.Func) bool {
-				return f.Name == fn.FullName()
-			})
-			if idx == -1 {
-				return true
-			}
-
-			msg := call.Args[funcs[idx].MsgPos]
-			params := call.Args[funcs[idx].ArgsPos:]
-
-			errs := checkArg(msg)
-			for _, param := range params {
-				errs = append(errs, checkArg(param)...)
-			}
-
-			for _, err := range errs {
-				pass.Reportf(call.Pos(), err.Error()+": %q",
-					render(pass.Fset, call))
-			}
-
-			return true
-		})
+	nodeFilter := []ast.Node{ // filter needed nodes: visit only them
+		(*ast.CallExpr)(nil),
 	}
+
+	inspector.Preorder(nodeFilter, func(n ast.Node) {
+		call := n.(*ast.CallExpr)
+
+		fn := typeutil.StaticCallee(pass.TypesInfo, call)
+
+		idx := slices.IndexFunc(funcs, func(f config.Func) bool {
+			return f.Name == fn.FullName()
+		})
+		if idx == -1 {
+			return
+		}
+
+		msg := call.Args[funcs[idx].MsgPos]
+		params := call.Args[funcs[idx].ArgPos:]
+
+		errs := checkArg(msg)
+		for _, param := range params {
+			errs = append(errs, checkArg(param)...)
+		}
+
+		for _, err := range errs {
+			pass.Reportf(call.Pos(), err.Error()+": %q",
+				render(pass.Fset, call))
+		}
+	})
 
 	return nil, nil
 }

@@ -10,3 +10,10 @@ unit:
 TESTS = ./logcheck/testdata
 test:
 	$(foreach file, $(wildcard $(TESTS)/*/*), echo $(file); go run ./cmd/main.go $(file); echo -------------------;)
+
+IMAGE_NAME = "test_docker"
+docker-build:
+	docker build -t $(IMAGE_NAME) .
+
+docker-run:
+	docker run -it --rm $(IMAGE_NAME)

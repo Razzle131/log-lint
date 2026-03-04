@@ -8,9 +8,9 @@ import (
 
 // Func describes a function to analyze, e.g. [slog.Info].
 type Func struct {
-	Name    string `yaml:"name"`   // full function name (example: (*log/slog.Logger).Info)
-	MsgPos  int    `yaml:"msgPos"` // position of msg argument starting from 0
-	ArgsPos int    `yaml:"argPos"` // The position of the "args ...any" argument starting from 0
+	Name   string `yaml:"name"`   // full function name (example: (*log/slog.Logger).Info)
+	MsgPos int    `yaml:"msgPos"` // position of msg argument starting from 0
+	ArgPos int    `yaml:"argPos"` // The position of the "args ...any" argument starting from 0
 }
 
 type Config struct {
