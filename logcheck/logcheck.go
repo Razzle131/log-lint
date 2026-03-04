@@ -91,8 +91,10 @@ func checkArg(expr ast.Expr) []error {
 	return res
 }
 
+const stringMinLen = 2
+
 func checkLiteral(literal *ast.BasicLit) []error {
-	if len(literal.Value) < 2 {
+	if len(literal.Value) < stringMinLen {
 		return []error{}
 	}
 

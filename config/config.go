@@ -17,11 +17,12 @@ type Config struct {
 	EnabledFuncs []Func   `yaml:"enabled_funcs"`                     // slice of func definitions that linter searches for
 }
 
+const allRulesEnabledMask = 15
+
 var defaultConfig = Config{
-	EnabledRules: 15,
+	EnabledRules: allRulesEnabledMask,
 	AvoidedData:  []string{"password", "apikey", "token"},
 	EnabledFuncs: []Func{
-		{Name: "log/slog.LogAttrs", MsgPos: 2, ArgPos: 3},
 		{Name: "log/slog.Debug", MsgPos: 0, ArgPos: 1},
 		{Name: "log/slog.Info", MsgPos: 0, ArgPos: 1},
 		{Name: "log/slog.Warn", MsgPos: 0, ArgPos: 1},
