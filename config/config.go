@@ -14,7 +14,7 @@ type Func struct {
 }
 
 type Config struct {
-	EnabledRules int      `yaml:"enabled_rules" env:"ENABLED_RULES"` // bit mask for rules on/off
+	EnabledRules int      `yaml:"enabled_rules" env:"ENABLED_RULES"` // bit mask for rules on/off (example: 1101=13 rule 2 is turned off)
 	AvoidedData  []string `yaml:"avoided_data" env:"AVOIDED_DATA"`   // slice of avoided names, lowercase only
 	EnabledFuncs []Func   `yaml:"enabled_funcs"`                     // slice of func definitions that linter searches for
 }

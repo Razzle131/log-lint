@@ -172,8 +172,6 @@ func TestCheckSensetive(t *testing.T) {
 		},
 	}
 
-	avoidedData = []string{"apikey"}
-
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 

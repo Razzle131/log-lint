@@ -61,7 +61,7 @@
 				
 				<option value="file2">github.com/Razzle131/loglint/logcheck/decorators.go (0.0%)</option>
 				
-				<option value="file3">github.com/Razzle131/loglint/logcheck/logcheck.go (23.9%)</option>
+				<option value="file3">github.com/Razzle131/loglint/logcheck/logcheck.go (26.2%)</option>
 				
 				</select>
 			</div>
@@ -121,7 +121,7 @@ type Func struct {
 }
 
 type Config struct {
-        EnabledRules int      `yaml:"enabled_rules" env:"ENABLED_RULES"` // bit mask for rules on/off
+        EnabledRules int      `yaml:"enabled_rules" env:"ENABLED_RULES"` // bit mask for rules on/off (example: 1101=13 rule 2 is turned off)
         AvoidedData  []string `yaml:"avoided_data" env:"AVOIDED_DATA"`   // slice of avoided names, lowercase only
         EnabledFuncs []Func   `yaml:"enabled_funcs"`                     // slice of func definitions that linter searches for
 }
@@ -170,14 +170,16 @@ import (
 )
 
 var (
-        analyzer    *analysis.Analyzer
-        funcs       []config.Func
-        avoidedData []string
+        analyzer     *analysis.Analyzer
+        funcs        []config.Func
+        avoidedData  []string = []string{"password", "apikey", "token"}
+        enabledRules int      = 15
 )
 
 func New(cfg config.Config) *analysis.Analyzer <span class="cov0" title="0">{
         funcs = cfg.EnabledFuncs
         avoidedData = cfg.AvoidedData
+        enabledRules = cfg.EnabledRules
 
         analyzer = &amp;analysis.Analyzer{
                 Name: "loglint",
@@ -279,7 +281,11 @@ func checkBinaryExpression(binaryExpr *ast.BinaryExpr) []error <span class="cov0
 }
 
 func checkFirstLetterCase(s string) error <span class="cov5" title="6">{
-        if len(s) &lt; 1 </span><span class="cov1" title="1">{
+        if enabledRules&gt;&gt;0%2 == 0 </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+
+        <span class="cov5" title="6">if len(s) &lt; 1 </span><span class="cov1" title="1">{
                 return nil
         }</span>
 
@@ -292,7 +298,11 @@ func checkFirstLetterCase(s string) error <span class="cov5" title="6">{
 }
 
 func checkEnglish(s string) error <span class="cov4" title="4">{
-        if strings.ContainsFunc(s, func(r rune) bool </span><span class="cov8" title="21">{
+        if enabledRules&gt;&gt;1%2 == 0 </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+
+        <span class="cov4" title="4">if strings.ContainsFunc(s, func(r rune) bool </span><span class="cov8" title="21">{
                 return r &gt; unicode.MaxLatin1 &amp;&amp; unicode.IsLetter(r)
         }</span>) <span class="cov1" title="1">{
                 return errors.New("message must contain only english letters")
@@ -302,7 +312,11 @@ func checkEnglish(s string) error <span class="cov4" title="4">{
 }
 
 func checkSpecialSymbols(s string) error <span class="cov5" title="6">{
-        if strings.ContainsFunc(s, func(r rune) bool </span><span class="cov10" title="36">{
+        if enabledRules&gt;&gt;2%2 == 0 </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+
+        <span class="cov5" title="6">if strings.ContainsFunc(s, func(r rune) bool </span><span class="cov10" title="36">{
                 return !unicode.IsLetter(r) &amp;&amp; !unicode.IsDigit(r) &amp;&amp; r != ' '
         }</span>) <span class="cov3" title="3">{
                 return errors.New("message must not contain special symbols")
@@ -312,7 +326,11 @@ func checkSpecialSymbols(s string) error <span class="cov5" title="6">{
 }
 
 func checkSensetive(s string) error <span class="cov3" title="3">{
-        if slices.Contains(avoidedData, strings.ToLower(s)) </span><span class="cov1" title="1">{
+        if enabledRules&gt;&gt;3%2 == 0 </span><span class="cov0" title="0">{
+                return nil
+        }</span>
+
+        <span class="cov3" title="3">if slices.Contains(avoidedData, strings.ToLower(s)) </span><span class="cov1" title="1">{
                 return errors.New("must not log sensitive data")
         }</span>
 

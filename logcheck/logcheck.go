@@ -16,14 +16,16 @@ import (
 )
 
 var (
-	analyzer    *analysis.Analyzer
-	funcs       []config.Func
-	avoidedData []string
+	analyzer     *analysis.Analyzer
+	funcs        []config.Func
+	avoidedData  []string = []string{"password", "apikey", "token"}
+	enabledRules int      = 15
 )
 
 func New(cfg config.Config) *analysis.Analyzer {
 	funcs = cfg.EnabledFuncs
 	avoidedData = cfg.AvoidedData
+	enabledRules = cfg.EnabledRules
 
 	analyzer = &analysis.Analyzer{
 		Name: "loglint",
@@ -125,6 +127,10 @@ func checkBinaryExpression(binaryExpr *ast.BinaryExpr) []error {
 }
 
 func checkFirstLetterCase(s string) error {
+	if enabledRules>>0%2 == 0 {
+		return nil
+	}
+
 	if len(s) < 1 {
 		return nil
 	}
@@ -138,6 +144,10 @@ func checkFirstLetterCase(s string) error {
 }
 
 func checkEnglish(s string) error {
+	if enabledRules>>1%2 == 0 {
+		return nil
+	}
+
 	if strings.ContainsFunc(s, func(r rune) bool {
 		return r > unicode.MaxLatin1 && unicode.IsLetter(r)
 	}) {
@@ -148,6 +158,10 @@ func checkEnglish(s string) error {
 }
 
 func checkSpecialSymbols(s string) error {
+	if enabledRules>>2%2 == 0 {
+		return nil
+	}
+
 	if strings.ContainsFunc(s, func(r rune) bool {
 		return !unicode.IsLetter(r) && !unicode.IsDigit(r) && r != ' '
 	}) {
@@ -158,6 +172,10 @@ func checkSpecialSymbols(s string) error {
 }
 
 func checkSensetive(s string) error {
+	if enabledRules>>3%2 == 0 {
+		return nil
+	}
+
 	if slices.Contains(avoidedData, strings.ToLower(s)) {
 		return errors.New("must not log sensitive data")
 	}
