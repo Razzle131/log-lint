@@ -61,7 +61,7 @@
 				
 				<option value="file2">github.com/Razzle131/loglint/logcheck/decorators.go (100.0%)</option>
 				
-				<option value="file3">github.com/Razzle131/loglint/logcheck/logcheck.go (93.4%)</option>
+				<option value="file3">github.com/Razzle131/loglint/logcheck/logcheck.go (91.2%)</option>
 				
 				</select>
 			</div>
@@ -195,16 +195,22 @@ func New(cfg config.Config) *analysis.Analyzer <span class="cov1" title="1">{
 }</span>
 
 func run(pass *analysis.Pass) (interface{}, error) <span class="cov1" title="1">{
-        inspector := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
+        inspector, ok := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
+        if !ok </span><span class="cov0" title="0">{
+                panic("failed to obtain inspector")</span>
+        }
 
-        nodeFilter := []ast.Node{ // filter needed nodes: visit only them
+        <span class="cov1" title="1">nodeFilter := []ast.Node{ // filter needed nodes: visit only them
                 (*ast.CallExpr)(nil),
         }
 
         inspector.Preorder(nodeFilter, func(n ast.Node) </span><span class="cov6" title="59">{
-                call := n.(*ast.CallExpr)
+                call, ok := n.(*ast.CallExpr)
+                if !ok </span><span class="cov0" title="0">{
+                        return
+                }</span>
 
-                fn := typeutil.StaticCallee(pass.TypesInfo, call)
+                <span class="cov6" title="59">fn := typeutil.StaticCallee(pass.TypesInfo, call)
 
                 idx := slices.IndexFunc(funcs, func(f config.Func) bool </span><span class="cov10" title="771">{
                         return f.Name == fn.FullName()

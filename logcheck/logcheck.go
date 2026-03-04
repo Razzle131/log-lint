@@ -40,14 +40,20 @@ func New(cfg config.Config) *analysis.Analyzer {
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {
-	inspector := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
+	inspector, ok := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
+	if !ok {
+		panic("failed to obtain inspector")
+	}
 
 	nodeFilter := []ast.Node{ // filter needed nodes: visit only them
 		(*ast.CallExpr)(nil),
 	}
 
 	inspector.Preorder(nodeFilter, func(n ast.Node) {
-		call := n.(*ast.CallExpr)
+		call, ok := n.(*ast.CallExpr)
+		if !ok {
+			return
+		}
 
 		fn := typeutil.StaticCallee(pass.TypesInfo, call)
 
