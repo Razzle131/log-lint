@@ -3,6 +3,7 @@ module github.com/Razzle131/loglint
 go 1.25.3
 
 require (
+	github.com/golangci/plugin-module-register v0.1.2
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/stretchr/testify v1.11.1
 	go.uber.org/zap v1.27.1

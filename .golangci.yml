@@ -47,6 +47,10 @@ linters:
       - third_party$
       - builtin$
       - examples$
+    rules:
+      - path: plugin\.go
+        linters:
+          - ireturn
 formatters:
   exclusions:
     generated: lax
